@@ -1,0 +1,131 @@
+{% extends 'home/base.html' %}
+
+{% block content %}
+    <!-- Подключение стилей и скрипта Flatpickr -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+
+    <style>
+        /* Стилизация самого поля ввода */
+        input[type="date"] {
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            padding: 8px;
+            font-size: 16px;
+            border-radius: 4px;
+            transition: border-color 0.3s ease;
+        }
+
+        /* Стилизация при фокусе */
+        input[type="date"]:focus {
+            border-color: #007bff;
+            outline: none;
+            background-color: #fff;
+        }
+
+        /* Добавление кастомного фона для выбранной даты */
+        input[type="date"]:valid {
+            background-color: #d3ffd3;
+        }
+    </style>
+
+    <h1>Бронирование</h1>
+
+    <form class="form-control w-25 bg-light" method="GET" action="{% url 'queute_list' %}">
+        <div class="row">
+            <div class="col">
+                <label for="date">Выберите дату:</label>
+                <input class="form-control" type="text" id="date" name="date" value="{{ selected_date }}">
+                <button class="form-control mt-2" type="submit">Показать слоты</button>
+            </div>
+        </div>
+
+    </form>
+
+    <h2>Слоты на {{ selected_date }}</h2>
+
+    <style>
+        .ul {
+            width: 1000px;
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .slot {
+            min-width: 200px;
+            list-style: none;
+            padding: 10px;
+            font-size: 20px;
+            border: 1px solid #adadad;
+        }
+        .slot_btn{
+            min-width: 120px;
+        }
+    </style>
+    <ul class="ul">
+        {% for slot in slots %}
+                <li class="slot">{{ slot.start_time }} - {{ slot.end_time }}</li>
+                {% if not slot.is_booked %}
+                    <button class="slot_btn btn btn-success"  onclick="bookSlot({{ slot.id }})">Записаться</button>
+                {% else %}
+                    <button class="slot_btn" disabled>Занято</button>
+                {% endif %}
+                {% empty %}
+                <li class="slot">Слоты не найдены.</li>
+        {% endfor %}
+    </ul>
+
+
+    <script>
+        function bookSlot(slotId) {
+            fetch(`/book-slot/${slotId}/`, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": getCSRFToken(),
+                    "Content-Type": "application/json"
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.redirect) {
+                        window.location.href = data.redirect;  // Перенаправляем на страницу входа
+                    } else if (data.error) {
+                        alert(data.error);
+                    } else {
+                        alert("Вы успешно записаны!");
+                        location.reload();
+                    }
+                })
+                .catch(error => console.error("Ошибка:", error));
+        }
+
+        function getCSRFToken() {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== "") {
+                let cookies = document.cookie.split(";");
+                for (let i = 0; i < cookies.length; i++) {
+                    let cookie = cookies[i].trim();
+                    if (cookie.startsWith("csrftoken=")) {
+                        cookieValue = cookie.substring("csrftoken=".length, cookie.length);
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            flatpickr("#date", {
+                dateFormat: "Y-m-d",  // Формат даты
+                minDate: "today",     // Ограничение на минимальную дату (сегодня)
+                maxDate: "2025-12-31",// Ограничение на максимальную дату
+                locale: "ru",         // Локализация на русский язык
+                theme: "material_blue" // Тема для календаря
+            });
+        });
+
+
+    </script>
+
+{% endblock %}

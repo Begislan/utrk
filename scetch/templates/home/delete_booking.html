@@ -1,0 +1,13 @@
+{% extends 'home/base.html' %}
+
+{% block content %}
+
+    <h1>Удалить: {{ booking.user }}</h1>
+
+    <form сlass="form-control" action="" method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="_method" value="DELETE">
+        {{ form.as_p }}
+        <input type="submit" value="Удалить">
+    </form>
+{% endblock %}

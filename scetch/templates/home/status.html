@@ -1,0 +1,23 @@
+{% extends 'home/base.html' %}
+
+{% block content %}
+
+    <h1>Ваши записи</h1>
+    {% if book %}
+
+        {% for book in book %}
+            <main class="">
+                <div class="bg-body-tertiary p-2 rounded">
+                    <h3>{{ book.slot }}</h3>
+                    <p class="lead">{{ book.user}}</p>
+                    <a class="btn btn-lg btn-primary" href="{% url 'delete_booking' book.id %}" role="button">Удалить</a>
+                </div>
+                <hr>
+            </main>
+        {% endfor %}
+    {% else %}
+        <h3>
+            У вас есть запис на
+        </h3>
+    {% endif %}
+{% endblock %}

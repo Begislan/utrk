@@ -1,0 +1,44 @@
+{% extends 'home/base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+    <h1>Расписание моих занятий</h1>
+
+    <style>
+        table, tr, td, th {
+            {#border: 1px solid black;#}
+        }
+    </style>
+
+    <table class="table table-bordered">
+        <tr>
+            <th>Время</th>
+            {% for date in week_dates %}
+                <th>{{ date|date:"j E, l" }}</th>
+            {% endfor %}
+        </tr>
+
+        {% for time in "09:00,09:30,10:00,10:30,11:00,11:30,12:00,12:30,13:00,13:30,14:00,14:30,15:00,15:30,16:00,16:30"|split:"," %}
+            <tr>
+                <td>{{ time }}</td>
+                {% for date in week_dates %}
+                    <td>
+                        {% with slots=grouped_books|get_item:date %}
+                            {% for booking in slots %}
+                                {% if booking.slot.start_time|time:"H:i" == time %}
+                                    <div style="background-color: lightblue; padding: 5px; border-radius: 5px;">
+                                        <strong>{{ booking.slot.start_time|time:"H:i" }} -
+                                            {{ booking.slot.end_time|time:"H:i" }}</strong><br>
+                                        <small>Забронировано: {{ booking.user }}</small><br>
+                                        <em>Дата брони: {{ booking.created_at|date:"j E Y, H:i" }}</em>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        {% endwith %}
+                    </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </table>
+
+{% endblock %}

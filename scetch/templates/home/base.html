@@ -1,51 +1,58 @@
 <!DOCTYPE html>
 <html lang="ru">
+{% load static %}
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Queute</title>
+    <title>УТРК</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 
 <body>
 
-    <header class="p-3 text-bg-dark">
-        <div class="container">
-            <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
-                <a href="/" class="d-flex align-items-center mb-2 mb-lg-0 text-white text-decoration-none">
-                    <img src="https://img.icons8.com/?size=100&id=53012&format=png&color=000000" class="bi me-2"
-                        width="40" height="32">
-                </a>
-                <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
-                    <li><a href="{% url 'home' %}" class="nav-link px-2 text-secondary">Главная</a></li>
+<header class="p-3 text-bg-dark">
+    <div class="container">
+        <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
+            <a href="/" class="d-flex align-items-center mb-2 mb-lg-0 text-white text-decoration-none">
+                <img src="{% static 'img/white_logo.png' %}" class="bi me-2"
+                     width="40" height="32">
+            </a>
+            <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
+
+                {% if user.is_authenticated %}
+                    <li><a href="{% url 'home' %}" class="nav-link px-2 text-white">Главная</a></li>
                     <li><a href="{% url 'queute_list' %}" class="nav-link px-2 text-white">Записаться</a></li>
                     <li><a href="{% url 'all_slots' %}" class="nav-link px-2 text-white">Список</a></li>
-                    {% if user.is_authenticated %}
-                    <li><a href="{% url 'status' %}" class="nav-link px-2 text-white">Сатус</a></li>
-                    {% else %}
-                    
-                    {% endif %}
-                </ul>
-                <div class="text-end">
-                    {% if user.is_authenticated %}
+                    <li><a href="{% url 'status' %}" class="nav-link px-2 text-white">Ваш статус бронирование</a></li>
+                {% else %}
+
+                {% endif %}
+            </ul>
+            <div class="text-end">
+                {% if user.is_authenticated %}
                     <span>{{ user.username }}!</span>
-                    <a href="{% url 'logout' %}"><button type="button" class="btn btn-warning">Выйти</button></a>
-                    {% else %}
-                    <a href="{% url 'login' %}"><button type="button" class="btn btn-outline-light me-2">Войти</button></a>
-                    {% endif %}       
-                </div>
+                    <a href="{% url 'logout' %}">
+                        <button type="button" class="btn btn-light">Выйти</button>
+                    </a>
+                {% else %}
+                    <a href="{% url 'login' %}">
+                        <button type="button" class="btn btn-light me-2">Войти</button>
+                    </a>
+                {% endif %}
             </div>
         </div>
-    </header>
-
-    <div class="container">
-        {% block content %}
-
-        {% endblock %}
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+</header>
+
+<div class="container">
+    {% block content %}
+
+    {% endblock %}
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous"></script>
 </body>

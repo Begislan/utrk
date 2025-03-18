@@ -2,13 +2,7 @@
 {% load custom_filters %}
 
 {% block content %}
-    <h1>Расписание моих занятий</h1>
-
-    <style>
-        table, tr, td, th {
-            {#border: 1px solid black;#}
-        }
-    </style>
+    <h1>Расписание всех занятий</h1>
 
     <table class="table table-bordered">
         <tr>
@@ -30,7 +24,6 @@
                                         <strong>{{ booking.slot.start_time|time:"H:i" }} -
                                             {{ booking.slot.end_time|time:"H:i" }}</strong><br>
                                         <small>Забронировано: {{ booking.user }}</small><br>
-                                        <em>Дата брони: {{ booking.created_at|date:"j E Y, H:i" }}</em>
                                     </div>
                                 {% endif %}
                             {% endfor %}

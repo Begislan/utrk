@@ -69,6 +69,7 @@ def queue_list(request):
     date = timezone.now().date()
     return render(request, "home/queue.html", {'selected_date': date, 'slots': slots})
 
+@login_required
 def status(request):
     books = Booking.objects.filter(user=request.user)
 
@@ -78,6 +79,7 @@ def status(request):
     print(context['book'])
     return render(request, 'home/status.html', context)
 
+@login_required
 def delete_booking(request, slot_id):
     booking = Booking.objects.get(id=slot_id)
     slot = booking.slot
@@ -88,6 +90,7 @@ def delete_booking(request, slot_id):
         return redirect('status')
     return render(request, 'home/delete_booking.html', {'booking': booking})
 
+@login_required
 def status_date(request):
     today = timezone.localdate()
     start_date = today - timedelta(days=today.weekday())  # Понедельник текущей недели

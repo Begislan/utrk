@@ -2,12 +2,14 @@
 
 {% block content %}
 
-    <h1>Удалить: {{ booking.user }}</h1>
 
-    <form сlass="form-control" action="" method="POST">
+    <div class="container" style="display: flex; justify-content: center; align-items: center; min-height: 100vh">
+    <form сlass="form-control" action="" method="POST" style="background-color: white; padding: 20px; ">
+        <h4>Удалить: {{ booking.user }}</h4>
         {% csrf_token %}
         <input type="hidden" name="_method" value="DELETE">
         {{ form.as_p }}
-        <input type="submit" value="Удалить">
+        <input class="btn btn-outline-danger" type="submit" value="Удалить">
     </form>
+    </div>
 {% endblock %}

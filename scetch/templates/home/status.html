@@ -1,23 +1,29 @@
 {% extends 'home/base.html' %}
 
 {% block content %}
+<div class="container mt-4">
+    <h1 class="text-center mb-4">Ваши записи</h1>
 
-    <h1>Ваши записи</h1>
     {% if book %}
-
-        {% for book in book %}
-            <main class="">
-                <div class="bg-body-tertiary p-2 rounded">
-                    <h3>{{ book.slot }}</h3>
-                    <p class="lead">{{ book.user}}</p>
-                    <a class="btn btn-lg btn-primary" href="{% url 'delete_booking' book.id %}" role="button">Удалить</a>
+        <div class="row justify-content-center">
+            {% for book in book %}
+                <div class="col-md-6">
+                    <div class="card shadow-sm border-0 mb-3">
+                        <div class="card-body">
+                            <h4 class="card-title text-primary">{{ book.slot }}</h4>
+                            <p class="card-text text-muted">Пользователь: {{ book.user }}</p>
+                            <a href="{% url 'delete_booking' book.id %}" class="btn btn-outline-danger w-100">
+                                Удалить запись
+                            </a>
+                        </div>
+                    </div>
                 </div>
-                <hr>
-            </main>
-        {% endfor %}
+            {% endfor %}
+        </div>
     {% else %}
-        <h3>
-            У вас есть запис на
-        </h3>
+        <div class="text-center">
+            <h3 class="text-muted">У вас нет записей</h3>
+        </div>
     {% endif %}
+</div>
 {% endblock %}

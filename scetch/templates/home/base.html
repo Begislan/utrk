@@ -33,7 +33,11 @@
             </ul>
             <div class="text-end">
                 {% if user.is_authenticated %}
+
                     <span>{{ user.username }}!</span>
+                    {% if user.is_staff %}
+                        <a href="{% url 'adminka_home' %}"><span>Вы явдяетесь сотрудником</span></a>
+                    {% endif %}
                     <a href="{% url 'logout' %}">
                         <button type="button" class="btn btn-light">Выйти</button>
                     </a>

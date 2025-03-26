@@ -116,3 +116,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_REDIRECT_URL = 'schedule'
 LOGOUT_REDIRECT_URL = 'core'
 LOGIN_URL = 'core'  # Куда отправлять неавторизованных пользователей
+
+# Установка времени неактивности (в секундах)
+SESSION_COOKIE_AGE = 20  # 30 минут
+SESSION_SAVE_EVERY_REQUEST = True  # Обновлять время сессии при каждом запросе
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True

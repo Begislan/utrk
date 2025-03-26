@@ -67,7 +67,7 @@ def user_login(request):
             return redirect("schedule")  # Перенаправляем на главную
 
     form = LoginForm()
-
+    request.session.set_expiry(3600)  #
     return render(request, "accounts/login.html", {"form": form})
 
 def user_logout(request):

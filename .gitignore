@@ -2,6 +2,7 @@
 env
 .env
 db.sqlite3
+/db.sqlite3
 .idea
 media
 # Python
@@ -18,10 +19,9 @@ venv/
 *.DS_Store
 
 # Django
-
 /media/
 staticfiles/
-
+config/settings.py
 
 # VS Code
 .vscode/

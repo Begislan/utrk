@@ -8,25 +8,25 @@ from .forms import RegisterForm, LoginForm
 from django.contrib import messages
 import requests
 
-def user_register(request):
-    if request.method == "POST":
-        form = RegisterForm(request.POST)
-        if form.is_valid():
-            form_data = {
-                'email' : request.POST['username'],
-                'password' : request.POST['password'],
-                }
-
-
-            # user = form.save(commit=False)
-            # user.set_password(form.cleaned_data['password'])  # Хешируем пароль
-            # user.save()
-            messages.success(request, "Вы успешно зарегистрированы!")
-            return redirect("login")
-    else:
-        form = RegisterForm()
-
-    return render(request, "accounts/register.html", {"form": form})
+# def user_register(request):
+#     if request.method == "POST":
+#         form = RegisterForm(request.POST)
+#         if form.is_valid():
+#             form_data = {
+#                 'email' : request.POST['username'],
+#                 'password' : request.POST['password'],
+#                 }
+#
+#
+#             # user = form.save(commit=False)
+#             # user.set_password(form.cleaned_data['password'])  # Хешируем пароль
+#             # user.save()
+#             messages.success(request, "Вы успешно зарегистрированы!")
+#             return redirect("login")
+#     else:
+#         form = RegisterForm()
+#
+#     return render(request, "accounts/register.html", {"form": form})
 
 def user_login(request):
     if request.method == "POST":

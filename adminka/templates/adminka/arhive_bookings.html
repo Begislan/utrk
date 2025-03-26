@@ -1,0 +1,30 @@
+{% extends 'adminka/adminka_base.html' %}
+
+{% block content %}
+
+    <h4>Удаленные записи</h4>
+
+    <table class="table">
+  <thead>
+    <tr>
+      <th scope="col"></th>
+      <th scope="col">Ф.И.О.</th>
+      <th scope="col">Дата удаление</th>
+      <th scope="col">Коментарий</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for arhive_video in arhive_bookings %}
+  	<tr>
+      <th scope="row">{{ forloop.counter }}</th>
+      <td>{{ arhive_video.user }}</td>
+      <td>{{ arhive_video.archived_at }}</td>
+      <td>{{ arhive_video.delete_comment }}</td>
+    </tr>
+  {% endfor %}
+  
+
+  </tbody>
+</table>
+
+{% endblock %}

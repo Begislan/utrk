@@ -1,0 +1,168 @@
+{% extends 'new/base.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="container">
+        <h1 class="my-4">Расписание занятий</h1>
+
+        <!-- Навигация по неделям -->
+        <div class="d-flex justify-content-between mb-4">
+            <a href="?date={{ selected_date|date:'Y-m-d' }}" class="btn btn-outline-primary">
+                Текущая неделя
+            </a>
+            <div>
+                <a href="?date={{ selected_date|date:'Y-m-d' }}" class="btn btn-outline-secondary">
+                    {{ selected_date|date:"F Y" }}
+                </a>
+            </div>
+        </div>
+
+        <!-- Таблица расписания -->
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead class="thead-light">
+                <tr>
+                    <th>Время</th>
+                    {% for date in week_dates %}
+                        <th>{{ date|date:"j E" }}<br>{{ date|date:"l" }}</th>
+                    {% endfor %}
+                </tr>
+                </thead>
+                <tbody>
+                {% for row in schedule_data %}
+                    <tr>
+                        <td>{{ row.time }}</td>
+                        {% for day in row.days %}
+                            <td>
+                                {% for item in day %}
+                                    {% if item.booking %}
+                                        <div class="p-2 mb-2 {% if item.is_owned %}bg-info text-white{% else %}bg-light{% endif %} rounded">
+                                            <div class="d-flex justify-content-between">
+                                                <span>
+                                                    {{ item.slot.start_time|time:"H:i" }}-{{ item.slot.end_time|time:"H:i" }}
+                                                </span>
+                                                {% if item.is_owned %}
+                                                    <form method="post" action="{% url 'schedule' %}" class="d-inline delete-booking-form">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="delete_booking" value="1">
+                                                        <input type="hidden" name="booking_id" value="{{ item.booking.id }}">
+                                                        <button type="submit" class="btn btn-sm btn-danger delete-booking-btn">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+
+                                                    </form>
+                                                {% endif %}
+                                            </div>
+                                            <small>
+                                                {% if item.is_owned %}
+                                                    Ваша запись
+                                                {% else %}
+                                                    {{ item.booking.user.get_full_name|default:item.booking.user.username }}
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                    {% else %}
+                                        <button class="btn btn-sm btn-outline-primary book-btn"
+                                                data-slot-id="{{ item.slot.id }}"
+                                                data-url="{% url 'book_slot' item.slot.id %}">
+                                        <i class="bi bi-calendar-plus"></i>
+                                            Забронировать
+                                        </button>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Модальное окно подтверждения бронирования -->
+    <div class="modal fade" id="bookingModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Подтверждение бронирования</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Вы уверены, что хотите забронировать этот слот?</p>
+                    <p id="slotTime"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-primary" id="confirmBooking">Подтвердить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script>
+        $(document).ready(function () {
+            // Обработка клика на кнопку бронирования
+            $(document).on('click', '.book-btn', function () {
+                const slotId = $(this).data('slot-id');
+                const slotUrl = $(this).data('url');
+                const timeText = $(this).closest('tr').find('td:first').text();
+
+                if (confirm(`Вы уверены, что хотите забронировать слот на ${timeText}?`)) {
+                    $.ajax({
+                        url: slotUrl,
+                        method: 'POST',
+                        data: {
+                            csrfmiddlewaretoken: '{{ csrf_token }}'
+                        },
+                        success: function (response) {
+                            if (response.success) {
+                                location.reload();
+                            } else {
+                                alert(response.error || 'Ошибка бронирования');
+                            }
+                        },
+                        error: function (xhr) {
+                            if (xhr.status === 401) {
+                                window.location.href = '/accounts/login/?next=' + window.location.pathname;
+                            } else {
+                                alert('Ошибка сервера: ' + xhr.statusText);
+                            }
+                        }
+                    });
+                }
+            });
+
+            // Обработка удаления бронирования с подтверждением
+            $(document).on('click', '.delete-booking-btn', function(e) {
+                e.preventDefault();
+                const form = $(this).closest('form');
+                const timeText = $(this).closest('tr').find('td:first').text();
+                const dateText = $(this).closest('td').find('th').text().trim() ||
+                               $(this).closest('td').prevAll().length + 1 + ' день недели';
+
+                if (confirm(`Вы действительно хотите отменить бронь на ${timeText} (${dateText})?`)) {
+                    form.submit();
+                }
+            });
+        });
+    </script>
+
+{#    <script>#}
+{#    $(document).on('click', '.delete-booking-btn', function(e) {#}
+{#    e.preventDefault();#}
+{#    const form = $(this).closest('form');#}
+{#    const timeText = $(this).closest('tr').find('td:first').text();#}
+{#    const dateText = $(this).closest('td').find('th').text().trim() ||#}
+{#                    $(this).closest('td').prevAll().length + 1 + ' день недели';#}
+{##}
+{#    if (confirm(`Вы действительно хотите отменить бронь на ${timeText} (${dateText})?`)) {#}
+{#        form.submit();#}
+{#    }#}
+{#});#}
+{#    </script>#}
+
+{% endblock %}

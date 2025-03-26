@@ -26,10 +26,7 @@
             <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
 
                 {% if user.is_authenticated %}
-                    <li><a href="{% url 'old_home' %}" class="nav-link px-2 text-white">Главная</a></li>
-                    <li><a href="{% url 'old_queute_list' %}" class="nav-link px-2 text-white">Записаться</a></li>
-                    <li><a href="{% url 'old_all_slots' %}" class="nav-link px-2 text-white">Список</a></li>
-                    <li><a href="{% url 'old_status' %}" class="nav-link px-2 text-white">Ваш статус бронирование</a></li>
+                    <li><a href="{% url 'schedule' %}" class="nav-link px-2 text-white">Бронирование</a></li>
                 {% else %}
 
                 {% endif %}
@@ -39,7 +36,7 @@
 
                     <span>{{ user.username }}!</span>
                     {% if user.is_staff %}
-                        <a href="{% url 'adminka_home' %}"><span>Вы явдяетесь сотрудником</span></a>
+                        <a href="{% url 'adminka_home' %}"><span>Вы являетесь сотрудником</span></a>
                     {% endif %}
                     <a href="{% url 'logout' %}">
                         <button type="button" class="btn btn-light">Выйти</button>

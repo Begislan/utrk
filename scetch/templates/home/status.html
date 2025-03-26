@@ -12,7 +12,7 @@
                         <div class="card-body">
                             <h4 class="card-title text-primary">{{ book.slot }}</h4>
                             <p class="card-text text-muted">Пользователь: {{ book.user }}</p>
-                            <a href="{% url 'delete_booking' book.id %}" class="btn btn-outline-danger w-100">
+                            <a href="{% url 'old_delete_booking' book.id %}" class="btn btn-outline-danger w-100">
                                 Удалить запись
                             </a>
                         </div>

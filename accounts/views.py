@@ -64,7 +64,7 @@ def user_login(request):
             # user = form.get_user()
             login(request, user)
             messages.success(request, "Вы успешно вошли в систему!")
-            return redirect("/")  # Перенаправляем на главную
+            return redirect("schedule")  # Перенаправляем на главную
 
     form = LoginForm()
 

@@ -76,7 +76,7 @@ def status(request):
     context = {
         'book': books
     }
-    print(context['book'])
+
     return render(request, 'home/status.html', context)
 
 @login_required
@@ -87,7 +87,7 @@ def delete_booking(request, slot_id):
         booking.delete()
         slot.is_booked = False
         slot.save()
-        return redirect('status')
+        return redirect('old_status')
     return render(request, 'home/delete_booking.html', {'booking': booking})
 
 @login_required

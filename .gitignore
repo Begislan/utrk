@@ -4,3 +4,32 @@ env
 db.sqlite3
 .idea
 media
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.pyd
+*.swp
+*.swo
+.Python
+env/
+venv/
+*.env
+*.DS_Store
+
+# Django
+
+/media/
+staticfiles/
+
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
+logs/
+
+# Migrations (если не нужно отслеживать миграции)
+**/migrations/*.py
+!**/migrations/__init__.py

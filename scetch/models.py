@@ -15,7 +15,20 @@ class Booking(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     slot = models.OneToOneField(QueueSlot, on_delete=models.CASCADE)  # Один слот - одна бронь
     created_at = models.DateTimeField(auto_now_add=True)
-    video = models.FileField(upload_to='media/viseo/%Y/%m/%d/', blank=True, null=True)
+    video = models.URLField(max_length=1000, blank=True, null=True)
 
     def __str__(self):
         return f"{self.user.username} - {self.slot}"
+
+
+class BookingArchive(models.Model):
+    original_id = models.IntegerField()
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    slot = models.ForeignKey(QueueSlot, on_delete=models.SET_NULL, null=True)
+    created_at = models.DateTimeField()
+    archived_at = models.DateTimeField(auto_now_add=True)
+    video = models.URLField(max_length=1000, blank=True, null=True)
+    delete_comment = models.TextField(verbose_name="Причина удаления", blank=True)  # Новое поле
+
+    def __str__(self):
+        return f"Архивная запись #{self.original_id} ({self.user})"

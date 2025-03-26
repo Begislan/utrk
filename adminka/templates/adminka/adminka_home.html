@@ -35,7 +35,7 @@
                         <td>
                             <a href="#"
                                class="video-link"
-                               data-video-url="{{ booking.video.url }}"
+                               data-video-url="{{ booking.video }}"
                                data-bs-toggle="modal"
                                data-bs-target="#videoModal">
                                 <i class="bi bi-camera-reels-fill"></i> Видео
@@ -46,30 +46,32 @@
                             <form action="{% url 'delete_video' booking.id %}" method="POST"
                                   onsubmit="return confirm('Вы уверены, что хотите удалить это видео?');">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-warning btn-sm mt-2">
-                                    <i class="bi bi-trash"></i> Удалить видео
+                                <button class="delete-video-btn" data-booking-id="{{ booking.id }}">
+                                    Удалить видео
                                 </button>
                             </form>
                         </td>
                     {% else %}
                         <td>
-                            <i class="bi bi-plus-circle-fill text-primary"
-                               role="button"
-                               data-bs-toggle="modal"
-                               data-bs-target="#uploadModal"
-                               data-booking-id="{{ booking.id }}">
-                            </i>
+                        <td>
+                            <!-- Кнопка для открытия модального окна -->
+                            <button type="button" class="btn btn-primary btn-sm"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#videoModal"
+                                    data-booking-id="{{ booking.id }}">
+                                <i class="bi bi-camera-video"></i> Добавить url видео
+                            </button>
+                        </td>
                         </td>
                     {% endif %}
                     <!-- Кнопка удаления -->
                     <td>
-                        <form action="{% url 'admin_delete_booking' booking.id %}" method="POST"
-                              onsubmit="return confirm('Вы уверены, что хотите удалить это бронирование?');">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger">
-                                <i class="bi bi-trash"></i> Удалить
-                            </button>
-                        </form>
+                        <button type="button" class="btn btn-danger btn-sm"
+                                data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                data-booking-id="{{ booking.id }}">
+                            <i class="bi bi-trash"></i> Удалить
+                        </button>
+
                     </td>
                 </tr>
             {% endfor %}
@@ -77,122 +79,305 @@
         </tbody>
     </table>
 
-    <!-- Модальное окно для воспроизведения видео -->
-    <div class="modal fade" id="videoModal" tabindex="-1" aria-labelledby="videoModalLabel" aria-hidden="true">
+    <!-- Модальное окно удаления -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="videoModalLabel">Воспроизведение видео</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <video id="videoPlayer" controls style="width: 100%;">
-                        <source id="videoSource" src="" type="video/mp4">
-                        Ваш браузер не поддерживает воспроизведение видео.
-                    </video>
-                </div>
+                <form id="deleteForm" method="POST" action="{% url 'admin_delete_booking' 0 %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="booking_id" id="modalBookingId">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title" id="deleteModalLabel">Подтверждение удаления</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Бронирование будет перемещено в архив. Укажите причину удаления:</p>
+                        <div class="mb-3">
+                            <textarea class="form-control" id="deleteComment" name="delete_comment" rows="3"
+                                      required></textarea>
+                            <div class="invalid-feedback">Пожалуйста, укажите причину удаления</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Удалить
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 
+    <!-- обработки кнопки удаления видео -->
     <script>
-        // Обработчик события для открытия модального окна и загрузки видео
-        document.addEventListener('DOMContentLoaded', function () {
-            const videoLinks = document.querySelectorAll('.video-link');
-            const videoPlayer = document.getElementById('videoPlayer');
-            const videoSource = document.getElementById('videoSource');
-            const modal = document.getElementById('videoModal');
-            const closeButton = modal.querySelector('.btn-close');
+        // Пример обработки кнопки удаления видео
+        document.querySelectorAll('.delete-video-btn').forEach(btn => {
+            btn.addEventListener('click', async function () {
+                if (confirm('Вы уверены, что хотите удалить видео?')) {
+                    const response = await fetch(`/delete-video/${this.dataset.bookingId}/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
 
-            videoLinks.forEach(function (link) {
-                link.addEventListener('click', function (e) {
-                    e.preventDefault(); // Предотвращаем стандартное поведение ссылки
-                    const videoUrl = link.getAttribute('data-video-url');
-                    videoSource.src = videoUrl;
-                    videoPlayer.load(); // Загружаем новое видео
-                    videoPlayer.play(); // Запускаем воспроизведение
-                });
-            });
-
-            // Обработчик для кнопки закрытия модального окна (иконка "X")
-            closeButton.addEventListener('click', function () {
-                videoPlayer.pause(); // Останавливаем видео
-                videoPlayer.currentTime = 0; // Сбрасываем видео в начало
-            });
-
-            // Также останавливаем видео, если модальное окно закрывается любым другим способом (например, при клике вне окна)
-            modal.addEventListener('hidden.bs.modal', function () {
-                videoPlayer.pause(); // Останавливаем видео
-                videoPlayer.currentTime = 0; // Сбрасываем видео в начало
+                    const result = await response.json();
+                    if (result.success) {
+                        location.reload(); // или обновить только нужную часть страницы
+                    }
+                }
             });
         });
     </script>
 
-
-    <!-- Модальное окно для загрузки видео -->
-    <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="uploadModalLabel">Загрузить видео</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="uploadForm" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        <input type="hidden" id="bookingId" name="booking_id">
-                        <input type="file" name="video" class="form-control" required>
-                        <div class="mt-3 text-center" id="loadingIndicator" style="display: none;">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Загрузка...</span>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-primary mt-3 w-100">Загрузить</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
+    {#Бронирование перемещение в архив.#}
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            let uploadModal = document.getElementById("uploadModal");
-            uploadModal.addEventListener("show.bs.modal", function (event) {
-                let button = event.relatedTarget;
-                let bookingId = button.getAttribute("data-booking-id");
-                document.getElementById("bookingId").value = bookingId;
+            const deleteModal = document.getElementById('deleteModal');
+            const deleteForm = document.getElementById('deleteForm');
+
+            // Обработчик открытия модального окна
+            deleteModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const bookingId = button.getAttribute('data-booking-id');
+                document.getElementById('modalBookingId').value = bookingId;
+
+                // Обновляем action формы с правильным ID
+                const formAction = deleteForm.getAttribute('action').replace('/0/', `/${bookingId}/`);
+                deleteForm.setAttribute('action', formAction);
+
+                // Сброс формы
+                deleteForm.reset();
             });
 
-            document.getElementById("uploadForm").addEventListener("submit", function (e) {
+            // Обработчик отправки формы
+            deleteForm.addEventListener('submit', function (e) {
                 e.preventDefault();
-                let formData = new FormData(this);
-                let loadingIndicator = document.getElementById("loadingIndicator");
-                loadingIndicator.style.display = "block";
 
-                fetch("{% url 'upload_video' %}", {
-                    method: "POST",
-                    body: formData,
+                const submitBtn = deleteForm.querySelector('button[type="submit"]');
+                const originalBtnText = submitBtn.innerHTML;
+
+                // Валидация
+                if (!deleteForm.checkValidity()) {
+                    deleteForm.classList.add('was-validated');
+                    return;
+                }
+
+                // Блокируем кнопку
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = `
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            Удаление...
+        `;
+
+                // Отправка формы стандартным способом
+                fetch(deleteForm.action, {
+                    method: 'POST',
+                    body: new FormData(deleteForm),
                     headers: {
-                        "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
+                        'X-Requested-With': 'XMLHttpRequest'
                     }
                 })
                     .then(response => response.json())
                     .then(data => {
-                        loadingIndicator.style.display = "none";
                         if (data.success) {
-                            location.reload();
+                            // Закрываем модальное окно
+                            bootstrap.Modal.getInstance(deleteModal).hide();
+
+                            // Показываем уведомление
+                            showToast('success', 'Бронирование удалено', 'Бронирование успешно перемещено в архив');
+
+                            // Обновляем страницу через 1 секунду
+                            setTimeout(() => location.reload(), 1000);
                         } else {
-                            alert("Ошибка загрузки видео");
+                            throw new Error(data.error || 'Неизвестная ошибка');
                         }
                     })
                     .catch(error => {
-                        loadingIndicator.style.display = "none";
-                        alert("Ошибка сети");
+                        showToast('danger', 'Ошибка', error.message);
+                        console.error('Ошибка удаления:', error);
+                    })
+                    .finally(() => {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalBtnText;
                     });
             });
+
+            // Функция для показа уведомлений
+            function showToast(type, title, message) {
+                const toastContainer = document.getElementById('toastContainer') || createToastContainer();
+                const toastId = 'toast-' + Date.now();
+
+                const toastHTML = `
+        <div id="${toastId}" class="toast align-items-center text-white bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <strong>${title}</strong><br>${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+        `;
+
+                toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+                const toast = new bootstrap.Toast(document.getElementById(toastId));
+                toast.show();
+
+                // Автоматическое скрытие через 5 секунд
+                setTimeout(() => toast.dispose(), 5000);
+            }
+
+            function createToastContainer() {
+                const container = document.createElement('div');
+                container.id = 'toastContainer';
+                container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+                container.style.zIndex = '1100';
+                document.body.appendChild(container);
+                return container;
+            }
         });
     </script>
 
+
+    {#  js  добавление ссылк видео#}
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Обработчик открытия модального окна
+            const videoModal = document.getElementById('videoModal');
+            if (videoModal) {
+                videoModal.addEventListener('show.bs.modal', function (event) {
+                    const button = event.relatedTarget;
+                    const bookingId = button.getAttribute('data-booking-id');
+                    document.getElementById('formBookingId').value = bookingId;
+                });
+            }
+
+            // Обработчик отправки формы
+            const videoForm = document.getElementById('videoForm');
+            if (videoForm) {
+                videoForm.addEventListener('submit', async function (e) {
+                    e.preventDefault();
+
+                    const form = e.target;
+                    const bookingId = form.formBookingId.value;
+                    const videoUrl = form.videoUrl.value;
+                    const submitBtn = form.querySelector('button[type="submit"]');
+
+                    // Валидация
+                    if (!videoUrl) {
+                        form.videoUrl.classList.add('is-invalid');
+                        return;
+                    }
+
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = `
+                <span class="spinner-border spinner-border-sm" role="status"></span>
+                Сохранение...
+            `;
+
+                    try {
+                        const response = await fetch(`/bookings/${bookingId}/video/`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            },
+                            body: JSON.stringify({video: videoUrl})
+                        });
+
+                        // Проверка ответа
+                        if (!response.ok) {
+                            const error = await response.json().catch(() => null);
+                            throw new Error(error?.error || 'Ошибка сервера');
+                        }
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            // Закрываем модальное окно
+                            bootstrap.Modal.getInstance(videoModal).hide();
+                            // Показываем уведомление
+                            showToast('success', 'Видео успешно сохранено');
+                            // Обновляем страницу через 1 секунду
+                            setTimeout(() => location.reload(), 1000);
+                        } else {
+                            throw new Error(result.error || 'Неизвестная ошибка');
+                        }
+                    } catch (error) {
+                        console.error('Ошибка:', error);
+                        showToast('danger', `Ошибка: ${error.message}`);
+                    } finally {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Сохранить';
+                    }
+                });
+            }
+
+            // Функция для показа уведомлений
+            function showToast(type, message) {
+                const toastContainer = document.getElementById('toastContainer') || createToastContainer();
+                const toastId = 'toast-' + Date.now();
+
+                const toastHTML = `
+        <div id="${toastId}" class="toast align-items-center text-white bg-${type} border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+        `;
+
+                toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+                new bootstrap.Toast(document.getElementById(toastId)).show();
+
+                // Автоматическое скрытие через 5 секунд
+                setTimeout(() => {
+                    const toast = document.getElementById(toastId);
+                    if (toast) toast.remove();
+                }, 5000);
+            }
+
+            function createToastContainer() {
+                const container = document.createElement('div');
+                container.id = 'toastContainer';
+                container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+                container.style.zIndex = '1100';
+                document.body.appendChild(container);
+                return container;
+            }
+        });
+    </script>
+
+    <!-- Модальное окно добавления видео -->
+    <div class="modal fade" id="videoModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="videoForm">
+                    <input type="hidden" id="formBookingId" name="booking_id">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Добавить видео</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="videoUrl" class="form-label">Ссылка на видео</label>
+                            <input type="url" class="form-control" id="videoUrl" name="video"
+                                   placeholder="https://example.com/video.mp4" required>
+                            <div class="invalid-feedback">Пожалуйста, введите корректный URL</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <button type="submit" class="btn btn-primary">Сохранить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
 {% endblock %}

@@ -3,6 +3,10 @@ from scetch.models import Booking, QueueSlot
 from django.contrib.auth.decorators import user_passes_test
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404,redirect
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
+from scetch.models import BookingArchive
+import json
 
 def staff_required(user):
     return user.is_staff  # Только сотрудники (админы, но не обязательно суперпользователи)
@@ -25,34 +29,106 @@ def adminka_home(request):
     return render(request, 'adminka/adminka_home.html', context)
 
 
-def upload_video(request):
-    if request.method == "POST" and request.FILES.get("video"):
-        booking_id = request.POST.get("booking_id")
-        booking = get_object_or_404(Booking, id=booking_id)
-        booking.video = request.FILES["video"]
-        booking.save()
-        return JsonResponse({"success": True})
-    return JsonResponse({"success": False}, status=400)
+# def upload_video(request):
+#     if request.method == "POST" and request.FILES.get("video"):
+#         booking_id = request.POST.get("booking_id")
+#         booking = get_object_or_404(Booking, id=booking_id)
+#         booking.video = request.FILES["video"]
+#         booking.save()
+#         return JsonResponse({"success": True})
+#     return JsonResponse({"success": False}, status=400)
 
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.shortcuts import get_object_or_404
+from scetch.models import Booking
+import validators
+
+
+@require_POST
+def upload_video(request, booking_id):
+    try:
+        booking = get_object_or_404(Booking, id=booking_id)
+
+        # Получаем URL видео из запроса
+        if request.content_type == 'application/json':
+            import json
+            data = json.loads(request.body)
+            video_url = data.get('video')
+        else:
+            video_url = request.POST.get('video')
+
+        # Валидация
+        if not video_url:
+            return JsonResponse({'success': False, 'error': 'URL видео не указан'}, status=400)
+
+        video_url = video_url.strip()
+        if not validators.url(video_url):
+            return JsonResponse({'success': False, 'error': 'Некорректный URL видео'}, status=400)
+
+        # Сохраняем URL
+        booking.video = video_url
+        booking.save()
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Видео успешно сохранено',
+            'video_url': booking.video
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
 
 def delete_video(request, booking_id):
-    # Проверка на наличие прав для удаления
     if request.method == 'POST':
         booking = get_object_or_404(Booking, id=booking_id)
 
-        # Если у бронирования есть видео, удаляем его
-        if booking.video:
-            booking.video.delete()  # Удаляет видеофайл с диска
-            booking.video = None  # Очищаем поле видео в модели
-            booking.save()  # Сохраняем изменения в базе данных
+        # Просто очищаем поле video (так как это URL, а не файл)
+        booking.video = None
+        booking.save()
 
-        # Перенаправление на страницу с бронированиями после удаления
-        return redirect('adminka_home')  # За
+        # Возвращаем JSON для AJAX или делаем редирект
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': True})
+        return redirect('adminka_home')
 
+    return JsonResponse({'success': False, 'error': 'Invalid method'}, status=400)
+
+@require_POST
 def admin_delete_booking(request, booking_id):
-    # Проверка на наличие прав для удаления
-    if request.method == 'POST':
+    try:
         booking = get_object_or_404(Booking, id=booking_id)
+
+        # Получаем комментарий из POST-данных
+        delete_comment = request.POST.get('delete_comment', '')
+
+        # Создаем архивную запись
+ # with transaction.atomic():
+        slot = booking.slot
+        slot.is_booked = False
+        slot.save()
+
+        BookingArchive.objects.create(
+            original_id=booking.id,
+            user=booking.user,
+            slot=booking.slot,
+            created_at=booking.created_at,
+            video=booking.video,
+            delete_comment=delete_comment
+        )
         booking.delete()
-        # Перенаправление на страницу со списком бронирований после удаления
-        return redirect('adminka_home')  # Замените 'bookings_list' на имя вашего URL для списка бронирований
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Бронирование успешно перемещено в архив'
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)

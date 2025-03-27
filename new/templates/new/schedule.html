@@ -3,7 +3,7 @@
 
 {% block content %}
     <div class="container">
-        <h1 class="my-4">Расписание занятий</h1>
+        <h1 class="my-4">Расписание видеостудии</h1>
 
         <!-- Навигация по неделям -->
         <div class="d-flex justify-content-between mb-4">
@@ -11,7 +11,7 @@
                 Текущая неделя
             </a>
             <div>
-                <a href="?date={{ selected_date|date:'Y-m-d' }}" class="btn btn-outline-secondary">
+                <a href="?date={{ selected_date|date:'Y-m-d' }}" class="btn btn-outline-primary">
                     {{ selected_date|date:"F Y" }}
                 </a>
             </div>

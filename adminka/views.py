@@ -56,7 +56,7 @@ def upload_video(request):
         if not booking_id or not video_url:
             return JsonResponse({'success': False, 'error': 'Не все поля заполнены'})
 
-        booking = Booking.objects.get(id=booking_id, user=request.user)
+        booking = Booking.objects.get(id=booking_id)
         booking.video = video_url
         booking.save()
 
@@ -72,7 +72,7 @@ def upload_video(request):
 @user_passes_test(staff_required)
 def delete_video(request, booking_id):
     try:
-        booking = Booking.objects.get(id=booking_id, user=request.user)
+        booking = Booking.objects.get(id=booking_id)
         booking.video = None
         booking.save()
         return JsonResponse({'success': True})

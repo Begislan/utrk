@@ -36,7 +36,7 @@ def schedule_view(request):
 
     # Определяем диапазон дат (сегодня + 31 день)
     start_date = timezone.localdate()
-    end_date = start_date + timedelta(days=12)
+    end_date = start_date + timedelta(days=7)
     # Определяем текущую дату (без времени)
     today = timezone.localdate()
 
@@ -46,7 +46,7 @@ def schedule_view(request):
     ).values_list('date', flat=True).distinct())
 
     # Создаем список всех дат в диапазоне
-    all_dates = [start_date + timedelta(days=i) for i in range(13)]  # 31 день + сегодня
+    all_dates = [start_date + timedelta(days=i) for i in range(8)]  # 31 день + сегодня
 
     # Находим даты, для которых нужно создать слоты
     dates_to_create = [date for date in all_dates if date not in existing_dates]
@@ -90,7 +90,7 @@ def schedule_view(request):
     bookings = Booking.objects.filter(slot__date__range=[start_date, end_date]).select_related('user', 'slot')
 
     # Группировка данных
-    week_dates = [start_date + timedelta(days=i) for i in range(13)]  # 31 день + сегодня
+    week_dates = [start_date + timedelta(days=i) for i in range(8)]  # 31 день + сегодня
     time_slots = ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00",
                   "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30",
                   "16:00", "16:30", "17:00", "17:30"]
@@ -119,6 +119,19 @@ def schedule_view(request):
     }
 
     return render(request, 'new/schedule.html', context)
+
+
+@login_required  # Декоратор для проверки авторизации
+def profile(request):
+    # Фильтруем бронирования только для текущего пользователя
+    user_bookings = Booking.objects.filter(user=request.user).order_by('-created_at')
+
+    context = {
+        'bookings': user_bookings
+    }
+
+    return render(request, 'new/profile.html', context)
+
 
 
 @login_required

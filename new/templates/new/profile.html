@@ -1,0 +1,197 @@
+{% extends 'new/base.html' %}
+{% load static %}
+{% load youtube_extras %}
+
+{% block content %}
+<style>
+    .booking-card {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        overflow: hidden;
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    }
+    
+    .booking-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+    .video-thumbnail {
+        position: relative;
+        cursor: pointer;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .play-button {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 3rem;
+        color: white;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        opacity: 0.9;
+        transition: all 0.3s;
+    }
+    .play-button:hover {
+        color: #ff0000;
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.1);
+    }
+    .empty-state {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 12px;
+    }
+    .modal-content {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+</style>
+
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold display-5 mb-3">Мои бронирования</h2>
+        <p class="text-muted">Здесь вы можете просмотреть все ваши текущие и прошлые бронирования</p>
+    </div>
+
+    {% if bookings %}
+    <div class="row g-4">
+        {% for booking in bookings %}
+        <div class="col-md-6 col-lg-4">
+            <div class="booking-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <span class="badge bg-primary rounded-pill">#{{ booking.id }}</span>
+                        <span class="badge bg-light text-dark ms-2">{{ booking.created_at|date:"d.m.Y" }}</span>
+                    </div>
+                    <div class="text-end">
+                        <small class="text-muted">{{ booking.created_at|date:"H:i" }}</small>
+                    </div>
+                </div>
+
+                <h5 class="fw-bold mb-3">{{ booking.slot }}</h5>
+
+                {% if booking.video %}
+                {% with video_id=booking.video|youtube_id %}
+                {% if video_id %}
+                <div class="video-thumbnail mt-3 mb-3">
+                    <img src="https://img.youtube.com/vi/{{ video_id }}/mqdefault.jpg"
+                         class="img-fluid w-100"
+                         alt="Превью видео">
+                    <div class="play-button"
+                         data-bs-toggle="modal"
+                         data-bs-target="#videoModal{{ booking.id }}">
+                        <i class="bi bi-play-circle-fill"></i>
+                    </div>
+                </div>
+                {% endif %}
+                {% endwith %}
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state p-5 text-center">
+        <div class="mb-4">
+            <i class="bi bi-calendar-x" style="font-size: 3rem; color: #6c757d;"></i>
+        </div>
+        <h4 class="mb-3">Бронирований пока нет</h4>
+        <p class="text-muted mb-4">Забронируйте время в видеостудии, чтобы здесь появились ваши записи</p>
+        <a href="{% url 'schedule' %}" class="btn btn-primary px-4 py-2 rounded-pill">
+            <i class="bi bi-plus-circle me-2"></i> Забронировать
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+
+
+<!-- Модальные окна для видео -->
+{% for booking in bookings %}
+{% if booking.video %}
+{% with video_id=booking.video|youtube_id %}
+{% if video_id %}
+<div class="modal fade" id="videoModal{{ booking.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">Видео бронирования #{{ booking.id }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="ratio ratio-16x9">
+                    <iframe id="youtubeIframe{{ booking.id }}" 
+                            src="https://www.youtube.com/embed/{{ video_id }}?enablejsapi=1&rel=0" 
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen></iframe>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endwith %}
+{% endif %}
+{% endfor %}
+
+<script>
+// Загрузка YouTube IFrame API
+var tag = document.createElement('script');
+tag.src = "https://www.youtube.com/iframe_api";
+var firstScriptTag = document.getElementsByTagName('script')[0];
+firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+// Хранилище для плееров
+var youtubePlayers = {};
+
+// Функция инициализации плеера
+function onYouTubeIframeAPIReady() {
+    {% for booking in bookings %}
+    {% if booking.video %}
+    {% with video_id=booking.video|youtube_id %}
+    {% if video_id %}
+    youtubePlayers['youtubeIframe{{ booking.id }}'] = new YT.Player('youtubeIframe{{ booking.id }}', {
+        events: {
+            'onReady': onPlayerReady
+        }
+    });
+    {% endif %}
+    {% endwith %}
+    {% endif %}
+    {% endfor %}
+}
+
+function onPlayerReady(event) {
+    // Можно добавить дополнительные обработчики при готовности плеера
+}
+
+// Остановка видео при закрытии модального окна
+document.addEventListener('DOMContentLoaded', function() {
+    {% for booking in bookings %}
+    {% if booking.video %}
+    {% with video_id=booking.video|youtube_id %}
+    {% if video_id %}
+    var modal{{ booking.id }} = document.getElementById('videoModal{{ booking.id }}');
+    modal{{ booking.id }}.addEventListener('hidden.bs.modal', function () {
+        var player = youtubePlayers['youtubeIframe{{ booking.id }}'];
+        if (player && typeof player.stopVideo === 'function') {
+            player.stopVideo();
+        }
+    });
+    {% endif %}
+    {% endwith %}
+    {% endif %}
+    {% endfor %}
+});
+</script>
+
+
+
+{% endblock %}

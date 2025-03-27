@@ -69,7 +69,7 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
+import os
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
@@ -108,7 +108,7 @@ STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
 
-STATIC_ROOT= os.path.join(PROJECT_DIR,'staticfiles/')
+STATIC_ROOT= os.path.join(BASE_DIR,'staticfiles/')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -123,3 +123,6 @@ LOGIN_URL = 'core'  # Куда отправлять неавторизованн
 SESSION_COOKIE_AGE = 20  # 30 минут
 SESSION_SAVE_EVERY_REQUEST = True  # Обновлять время сессии при каждом запросе
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+
+AUTH_USER_MODEL = 'accounts.User'

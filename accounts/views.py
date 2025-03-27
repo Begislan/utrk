@@ -1,7 +1,7 @@
 from getpass import getuser
 from multiprocessing.util import is_exiting
 
-from django.contrib.auth.models import User
+from accounts.models import User
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from .forms import RegisterForm, LoginForm
@@ -37,6 +37,7 @@ def user_login(request):
             'password': request.POST['password'],
         }
         res = requests.post('https://api.myedu.oshsu.kg/public/api/login', form_data)
+
         if res.status_code == 200:
             token = res.json()['authorisation']['token']
             headers = {
@@ -44,18 +45,43 @@ def user_login(request):
                 "Content-Type": "application/json",  # Указываем тип контента, если нужно
             }
             userinfo = requests.get('https://api.myedu.oshsu.kg/public/api/user',headers=headers)
+            user_information = requests.get('https://api.myedu.oshsu.kg/public/api/utrk/teacher',headers=headers)
+
             getuser = userinfo.json()['user']
             email = getuser['email']
             password = request.POST['password']
             username =  getuser['last_name'] + ' ' + getuser['name']
-            # print(getuser['email'])
+
+            #Должность
+            user_doljnost = user_information.json()['norm_hour']
+            doljnost_kg = user_doljnost['name_kg']
+            doljnost_ru = user_doljnost['name_ru']
+            doljnost_en = user_doljnost['name_en']
+
+            #Кафедра
+            user_kafedra = user_information.json()['kafedra']
+            kafedra_kg = user_kafedra['name_kg']
+            kafedra_ru = user_kafedra['name_ru']
+            kafedra_en = user_kafedra['name_en']
+
+
+
             is_exists = User.objects.filter(email=email).exists()
 
             if not is_exists :
                 user = User.objects.create(
                     email = email,
                     username = username,
-                    password = password
+                    password = password,
+
+                    doljnost_kg = doljnost_kg,
+                    doljnost_ru = doljnost_ru,
+                    doljnost_en = doljnost_en,
+
+                    kafedra_kg = kafedra_kg,
+                    kafedra_ru = kafedra_ru,
+                    kafedra_en = kafedra_en,
+
                 )
                 user.set_password(password)
                 user.save()

@@ -29,7 +29,20 @@
             {% for booking in bookings %}
                 <tr>
                     <th scope="row">{{ forloop.counter }}</th>
-                    <td>{{ booking.user }}</td>
+                    <td>
+
+                        <button class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            {{ booking.user }}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-dark">
+                            <li class="dropdown-item">Должность kg: {{ booking.user.doljnost_kg }}</li>
+                            <li class="dropdown-item">Должность ru: {{ booking.user.doljnost_ru }}</li>
+                            <li class="dropdown-item">Должность en: {{ booking.user.doljnost_en }}</li>
+                            <li class="dropdown-item">Кафедра kg: {{ booking.user.kafedra_kg }}</li>
+                            <li class="dropdown-item">Кафедра ru: {{ booking.user.kafedra_ru }}</li>
+                            <li class="dropdown-item">Кафедра en: {{ booking.user.kafedra_en }}</li>
+                        </ul>
+                    </td>
                     <td>{{ booking.slot }}</td>
                     <td>{{ booking.created_at }}</td>
                     {% if booking.video %}
